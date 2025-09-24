@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang='eng'>
+<head>
+	<meta charset='UTF-8'/>
+	<title>Twitch Follower Alert</title>
+	<link rel='stylesheet' href='styles.css'/>
+</head>
+<body>
+	<div id='debug-last-follower'></div>
+
+	<div id='follow_container'>
+		<img id="follow-gif" src='duck.gif' alt='New Follow!'/>
+		<div id='follow-text'></div>
+	</div>
+	<audio id='follow-sound' src='follow_sound.ogg' preload='auto'></audio>
+
+	<script src='check_for_followers.js'></script>
+</body>
+</html>
