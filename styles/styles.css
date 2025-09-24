@@ -1,0 +1,47 @@
+body {
+	margin: 0;
+	background: transparent;
+	overflow: hidden;
+}
+
+#follow_container {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	text-align: center;
+	pointer-events: none;
+}
+
+#follow-gif {
+	/*position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	display: none;
+	pointer-events: none;
+	max-width: 80vw;
+	max-height: 80vh;
+	z-index: 9999;*/
+
+	max-width: 80vw;
+	max-height: 80vh;
+	display: none;
+	pointer-events: none;
+	margin: 0 auto;
+}
+
+#follow-text {
+	display: none;
+	text-align: center;
+	color: white;
+	font-size: 30px;
+	margin-top: 10px;
+	font-family: Arial, sans-serif;
+
+	text-shadow:
+		-1px -1px 0 #000,
+		1px -1px 0 #000,
+		-1px 1px 0 #000,
+		1px 1px 0 #000;
+}
