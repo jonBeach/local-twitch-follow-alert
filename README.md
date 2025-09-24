@@ -27,10 +27,12 @@ This project allows you to display custom alerts in OBS and your browser wheneve
    ```
 
 2. **Get a Twitch Client ID:**
-   - Find a Twitch application Client ID online somewhere.
-   Or
+   - Find a Twitch application Client ID online.
+
+   > **OR**
+
    - Go to [Twitch Developer Console](https://dev.twitch.tv/).
-   - Log in and create a new application.
+   - Log in and create a new app.
    - Copy the Client ID.
 
 3. **Create and Populate .env File:**
@@ -63,8 +65,10 @@ This project allows you to display custom alerts in OBS and your browser wheneve
    ```
 
 2. **Get a Twitch Client ID:**
-   - Find a Twitch application Client ID online somewhere.
-   Or
+   - Find a Twitch application Client ID online.
+
+   > **OR**
+
    - Go to [Twitch Developer Console](https://dev.twitch.tv/).
    - Log in and create a new app.
    - Copy the Client ID.
