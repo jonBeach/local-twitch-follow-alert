@@ -4,6 +4,10 @@ body {
 	overflow: hidden;
 }
 
+#debug-last-follower {
+	white-space: pre-line;
+}
+
 #follow_container {
 	position: fixed;
 	top: 50%;
