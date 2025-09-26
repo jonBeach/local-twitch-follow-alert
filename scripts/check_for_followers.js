@@ -6,13 +6,14 @@ let USER_ID = '';
 // Follow alert resources
 const FOLLOW_GIF = document.getElementById('follow-gif');
 const FOLLOW_TEXT = document.getElementById('follow-text');
-const FOLLOW_MSG = 'SOMEONE followed!'
+const FOLLOW_MSG = 'SOMEONE followed!';
 const FOLLOW_SOUND = document.getElementById('follow-sound');
 FOLLOW_SOUND.volume = 0.5; //5 50% volume
 
 const POLL_INTERVAL = 2000; // Checks followers every 2 seconds
 const GIF_SHOW_DURATION = 5000; // Gif lasts 5 seconds on screen
 
+let current_date = new Date().toISOString(); // current date in "20250-09-25T22:22:08Z" format
 
 let known_follower_ids = new Set(); // Set of seen followers ids
 
@@ -33,7 +34,7 @@ async function get_followers() {
 	});
 
 	const data = await response.json();
-	return data.data
+	return data.data;
 }
 
 function show_follow_gif() {
@@ -59,33 +60,34 @@ async function check_new_follow() {
 		const followers = await get_followers();
 
 		// If no followers do nothing
-		if (followers.length == 0) return;
+		if (followers.length === 0) return;
 
 		// This is for debug to see most recent follower in the top left of the page
 		if (debug_followers) {
-			if (followers.length > 0) {
-				const last_follower = followers[0];
-				debug_div.textContent = `Last follower: ${last_follower.user_name} (ID: ${last_follower.user_id})`;
-			} else {
-				debug_div.textContent = 'No followers found.';
-			}
+			const last_follower = followers[0];
+			debug_div.textContent = 
+			`Last Follower: ${last_follower.user_name}
+			ID: ${last_follower.user_id}
+			Date Followed: ${last_follower.followed_at}`;
 		}
 
 		// Reads through all the followers in the new list
 		for (const follower of followers) {
-			if (known_follower_ids.has(follower.user_id)){
-				// Now this is needed because if someone unfollows without this a
+			if (follower.followed_at < current_date) {
+				// Ignores any followers if their followed_at date
+				// is before this script is ran
+				break;
+			}
+			if (known_follower_ids.has(follower.user_id)) {
+				// This is needed because if someone unfollows without this a
 				// new follower would be detected because in the list of 20 followers
 				// the last one in the list is "new" to the list so its counted as
 				// a new follower.
-				// A bug that can happen if the inital 20 followers that populated the Set
-				// unfollow then the new list of 20 will all be counted as new followers...
-				// Will try and fix this later
 				break;
 			}
 			if (!known_follower_ids.has(follower.user_id)) {
 				// New Follower Found
-				known_follower_ids.add(follower.user_id)
+				known_follower_ids.add(follower.user_id);
 				show_follow_gif();
 
 				//break is for if for each poll i only want to show
@@ -94,6 +96,13 @@ async function check_new_follow() {
 				//each new follower
 				//break;
 			}
+		}
+
+		// Change newest followers followed at time to current_date
+		// so we can ignore any follower with an older followed_at date
+		let newest_followed_at = followers[0].followed_at;
+		if (current_date < newest_followed_at) {
+			current_date = newest_followed_at;
 		}
 
 		// Trims the Set to 100 known followers limit. Can be changed.
@@ -135,9 +144,12 @@ async function init() {
 	try {
 		const followers = await get_followers();
 		followers.forEach(f => known_follower_ids.add(f.user_id));
-		console.log(known_follower_ids)
+
+		if (debug_followers) {
+			console.log(known_follower_ids);
+		}
 	} catch (e) {
-		console.error('Error loading inital followers:', e)
+		console.error('Error loading inital followers:', e);
 	}
 }
 
