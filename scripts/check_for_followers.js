@@ -3,6 +3,7 @@ let ACCESS_TOKEN = '';
 let REFRESH_TOKEN = '';
 let CLIENT_ID = '';
 let USER_ID = '';
+let token_expires_in = -1;
 
 // Follow alert resources
 const FOLLOW_GIF = document.getElementById('follow-gif');
@@ -138,11 +139,29 @@ function load_config() {
 	}
 }
 
-async function init() {
-	// Loads the needed variables for twitch api
-	// Gets 20 most recent followers and populates Set
-	load_config();
+async function validate_access_token() {
+	const URL = 'https://id.twitch.tv/oauth2/validate';
+	const headers = {
+		'Authorization': `Bearer ${ACCESS_TOKEN}`
+	};
 
+	try {
+		const response = await fetch(URL, {method: 'GET', headers: headers});
+
+		if (!response.ok) {
+			throw new Error(`Token is INVALID`);
+		}
+
+		const data = await response.json();
+		console.log(`Token is valid! ${data.expires_in}`);
+		token_expires_in = data.expires_in;
+	} catch (e) {
+		console.error('Error validating token', e);
+	}
+}
+
+async function init() {
+	// Gets 20 most recent followers and populates Set
 	try {
 		const followers = await get_followers();
 		followers.forEach(f => known_follower_ids.add(f.user_id));
@@ -156,6 +175,9 @@ async function init() {
 }
 
 async function start() {
+	load_config(); // Loads the needed variables for twitch api
+	await validate_access_token();
+
 	// runs setup then starts the 2 second interval
 	// for checking for new followers
 	await init();
