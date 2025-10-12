@@ -1,5 +1,6 @@
 // Initilize needed variables for getting followers
 let ACCESS_TOKEN = '';
+let REFRESH_TOKEN = '';
 let CLIENT_ID = '';
 let USER_ID = '';
 
@@ -17,7 +18,7 @@ let current_date = new Date().toISOString(); // current date in "20250-09-25T22:
 
 let known_follower_ids = new Set(); // Set of seen followers ids
 
-const debug_followers = false; // set to 'true' to see follower debug
+const debug_followers = true; // set to 'true' to see follower debug
 let debug_div = document.getElementById('debug-last-follower');
 
 
@@ -129,6 +130,7 @@ function load_config() {
 	try {
 		const config = JSON.parse(config_tag.textContent);
 		ACCESS_TOKEN = config.access_token;
+		REFRESH_TOKEN = config.refresh_token;
 		CLIENT_ID = config.client_id;
 		USER_ID = config.user_id;
 	} catch (e) {
