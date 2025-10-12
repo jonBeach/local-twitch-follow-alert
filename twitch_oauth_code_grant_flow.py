@@ -1,5 +1,6 @@
 import webbrowser
 import os
+import sys
 import requests
 import json
 from env_manager import Env
@@ -28,6 +29,14 @@ auth_app_url = (
 	f'&scope={" ".join(SCOPES)}'
 	f'&state={STATE_CODE}'
 )
+
+auth_token_url_params = {
+	'client_id': CLIENT_ID,
+	'client_secret': CLIENT_SECRET,
+	'code': None,
+	'grant_type': 'authorization_code',
+	'redirect_uri': REDIRECT_URI
+}
 
 defualt_browser = True
 
@@ -82,6 +91,54 @@ def get_user_id(access_token: str) -> str | None:
 		return None
 
 
+def get_user_code(url: str) -> str | None:
+	"""
+	Gets the users 'code' needed to access
+	the users 'access_token' and 'refresh_token'
+	from the given url(uri).
+	"""
+	params = url.split('?')[1]
+	params = params.split('&')
+
+	for param in params:
+		key, value = param.split('=')
+
+		if key == 'code':
+			return value
+	return None
+
+
+def get_tokens(code: str, params: dict) -> dict | None:
+	"""
+	Sends a request with the needed params and gets
+	the users 'access_token' and 'refresh_token' in
+	response.
+	"""
+	if not code:
+		return None
+
+	params['code'] = code
+
+	token_url = 'https://id.twitch.tv/oauth2/token'
+
+	try:
+		response = requests.post(token_url, data=params)
+
+		if response.status_code == 200:
+			return response.json()
+		else:
+			print(
+				f'Error getting Tokens:\n'
+				f'Status Code: {response.status_code}\n'
+				f'Message: {response.text}'
+			)
+			return None
+
+	except requests.exceptions.RequestException as e:
+		print(f'Error getting Tokens: {e}')
+		return None
+
+
 def edit_html_file(access_token: str, user_id: str) -> bool:
 	html_injection_text = [
 		"\t<script id='config' type='application/json'>\n",
@@ -109,7 +166,7 @@ def edit_html_file(access_token: str, user_id: str) -> bool:
 		print(f'Error writing to index.html file')
 		return False
 
-	print('index.html successfully injected!')
+	print('\n\nindex.html successfully injected!')
 	return True
 
 def main():
@@ -146,27 +203,27 @@ def main():
 	if change_browser:
 		new_browser = get_browser(change_browser)
 		if new_browser:
-			new_browser.open(auth_url)
+			new_browser.open(auth_app_url)
 		else:
-			webbrowser.open(auth_url)
+			webbrowser.open(auth_app_url)
 	else:
-		webbrowser.open(auth_url)
+		webbrowser.open(auth_app_url)
 
-	access_token = input('\nOauth URL: ')
+	code_url = input('\nOauth URL: ')
 
-	access_token = access_token[18:]
+	code = get_user_code(code_url)
 
-	access_token = access_token.split('&')
+	tokens = get_tokens(code, auth_token_url_params)
 
-	# Get access token from url
-	for i in access_token:
-		i = i.split('=')
-		if i[0] == 'access_token':
-			access_token = i[1]
-			break
+	if not tokens:
+		sys.exit('No Tokens found. Try again?!?')
 
 	try:
+		access_token = tokens['access_token']
+		refresh_token = tokens['refresh_token']
+
 		user_id = get_user_id(access_token)
+
 		html_success = edit_html_file(access_token, user_id)
 		print(f'\nAccess Token: {access_token}')
 
@@ -176,7 +233,6 @@ def main():
 		print(
 			f'This might be your access token: {access_token}'
 		)
-
 
 if __name__ == '__main__':
 	main()
