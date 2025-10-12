@@ -9,6 +9,9 @@ env = Env()
 env.load_env()
 CLIENT_ID = env.get_env_variable('CLIENT_ID')
 REDIRECT_URI = env.get_env_variable('REDIRECT_URI')
+CLIENT_SECRET = env.get_env_variable('CLIENT_SECRET')
+
+STATE_CODE = 'randomStuffHereHAHAH'
 
 # Scope of what the oauth wants to access
 SCOPES = [
@@ -17,12 +20,13 @@ SCOPES = [
 ]
 
 # oauth url
-auth_url = (
+auth_app_url = (
 	f'https://id.twitch.tv/oauth2/authorize'
-	f'?response_type=token'
+	f'?response_type=code'
 	f'&client_id={CLIENT_ID}'
 	f'&redirect_uri={REDIRECT_URI}'
 	f'&scope={" ".join(SCOPES)}'
+	f'&state={STATE_CODE}'
 )
 
 defualt_browser = True
