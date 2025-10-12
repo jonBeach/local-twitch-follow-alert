@@ -3,17 +3,17 @@
 <head>
 	<meta charset='UTF-8'/>
 	<title>Twitch Follower Alert</title>
-	<link rel='stylesheet' href='styles.css'/>
+	<link rel='stylesheet' href='styles/styles.css'/>
 </head>
 <body>
 	<div id='debug-last-follower'></div>
 
 	<div id='follow_container'>
-		<img id="follow-gif" src='duck.gif' alt='New Follow!'/>
+		<img id="follow-gif" src='resources/duck.gif' alt='New Follow!'/>
 		<div id='follow-text'></div>
 	</div>
-	<audio id='follow-sound' src='follow_sound.ogg' preload='auto'></audio>
+	<audio id='follow-sound' src='resources/follow_sound.ogg' preload='auto'></audio>
 
-	<script src='check_for_followers.js'></script>
+	<script src='scripts/check_for_followers.js'></script>
 </body>
 </html>
