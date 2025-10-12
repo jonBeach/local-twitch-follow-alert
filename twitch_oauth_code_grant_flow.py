@@ -139,11 +139,12 @@ def get_tokens(code: str, params: dict) -> dict | None:
 		return None
 
 
-def edit_html_file(access_token: str, user_id: str) -> bool:
+def edit_html_file(access_token: str, user_id: str, refresh_token: str) -> bool:
 	html_injection_text = [
 		"\t<script id='config' type='application/json'>\n",
 		"\t\t{\n",
 		f'\t\t\t"access_token": "{access_token}",\n',
+		f'\t\t\t"refresh_token": "{refresh_token}",\n',
 		f'\t\t\t"client_id": "{CLIENT_ID}",\n',
 		f'\t\t\t"user_id": "{user_id}"\n',
 		"\t\t}\n",
@@ -217,14 +218,14 @@ def main():
 
 	if not tokens:
 		sys.exit('No Tokens found. Try again?!?')
-
+	
 	try:
 		access_token = tokens['access_token']
 		refresh_token = tokens['refresh_token']
 
 		user_id = get_user_id(access_token)
 
-		html_success = edit_html_file(access_token, user_id)
+		html_success = edit_html_file(access_token, user_id, refresh_token)
 		print(f'\nAccess Token: {access_token}')
 
 		if html_success:
