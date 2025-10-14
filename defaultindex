@@ -8,8 +8,12 @@
 <body>
 	<div id='debug-last-follower'></div>
 
-	<div id='follow_container'>
-		<img id="follow-gif" src='resources/duck.gif' alt='New Follow!'/>
+	<div id='blackout-screen'>
+		<div id='blackout-text'></div>
+	</div>
+
+	<div id='follow-container'>
+		<img id='follow-gif' src='resources/duck.gif' alt='New Follow!'/>
 		<div id='follow-text'></div>
 	</div>
 	<audio id='follow-sound' src='resources/follow_sound.ogg' preload='auto'></audio>
