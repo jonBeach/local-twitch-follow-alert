@@ -139,7 +139,24 @@ function load_config() {
 	}
 }
 
+function blackout_screen(blackscreen, error) {
+	// makes the screen either black or transparent(OBS)/white(Browsers)
+	if (error) {
+		document.getElementById('blackout-screen').style.display = 'flex';
+		document.getElementById('blackout-text').textContent = 'Error validating token';
+	}
+
+	if (blackscreen) {
+		document.getElementById('blackout-screen').style.display = 'flex';
+		document.getElementById('blackout-text').textContent = 'Token is INVALID';
+	} else {
+		document.getElementById('blackout-screen').style.display = 'none';
+	}
+}
+
 async function validate_access_token() {
+	// Returns if the access token is valid or not
+	// When invalid, displays that is INVALID on screen
 	const URL = 'https://id.twitch.tv/oauth2/validate';
 	const headers = {
 		'Authorization': `Bearer ${ACCESS_TOKEN}`
@@ -149,15 +166,26 @@ async function validate_access_token() {
 		const response = await fetch(URL, {method: 'GET', headers: headers});
 
 		if (!response.ok) {
-			throw new Error(`Token is INVALID`);
+			console.log('Token is INVALID')
+			blackout_screen(true, false)
+			return false
 		}
 
 		const data = await response.json();
 		console.log(`Token is valid! ${data.expires_in}`);
 		token_expires_in = data.expires_in;
+		blackout_screen(false, false)
+		return true
 	} catch (e) {
 		console.error('Error validating token', e);
+		blackout_screen(true, true)
+		return false
 	}
+}
+
+function delay(ms) {
+	// Delay function...
+	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function init() {
@@ -176,8 +204,16 @@ async function init() {
 
 async function start() {
 	load_config(); // Loads the needed variables for twitch api
-	await validate_access_token();
 
+	// Keeps checking if access token is valid on 3 second loop
+	let valid_access_token = false;
+	while (!valid_access_token){
+		valid_access_token = await validate_access_token();
+		if (!valid_access_token) {
+			await delay(3000);
+		}
+	}
+	
 	// runs setup then starts the 2 second interval
 	// for checking for new followers
 	await init();
