@@ -2,6 +2,7 @@
 let ACCESS_TOKEN = '';
 let REFRESH_TOKEN = '';
 let CLIENT_ID = '';
+let CLIENT_SECRET = '';
 let USER_ID = '';
 let token_expires_in = -1;
 
@@ -133,6 +134,7 @@ function load_config() {
 		ACCESS_TOKEN = config.access_token;
 		REFRESH_TOKEN = config.refresh_token;
 		CLIENT_ID = config.client_id;
+		CLIENT_SECRET = config.client_secret;
 		USER_ID = config.user_id;
 	} catch (e) {
 		console.error('Error parsing config:', e);
@@ -151,6 +153,66 @@ function blackout_screen(blackscreen, error) {
 		document.getElementById('blackout-text').textContent = 'Token is INVALID';
 	} else {
 		document.getElementById('blackout-screen').style.display = 'none';
+	}
+}
+
+function set_local_storage(data) {
+	try {
+		for (const key in data) {
+			localStorage.setItem(key, data[key]);
+		}
+	} catch (e) {
+		console.error('Failed to SET localStorage:', e);
+	}
+}
+
+function get_local_storage(key) {
+	try {
+		return localStorage.getItem(key);
+	} catch (e) {
+		console.error('Failed to GET localStorage:', e);
+		return null;
+	}
+}
+
+async function get_new_tokens() {
+	const body_params = new URLSearchParams();
+	body_params.append('client_id', CLIENT_ID);
+	body_params.append('client_secret', CLIENT_SECRET);
+	body_params.append('grant_type', 'refresh_token');
+
+	const ls_refresh_token = get_local_storage('refresh_token');
+
+	if (ls_refresh_token === null) {
+		body_params.append('refresh_token', REFRESH_TOKEN);
+	} else {
+		body_params.append('refresh_token', ls_refresh_token);
+	}
+
+	try {
+		const response = await fetch('https://id.twitch.tv/oauth2/token', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+			body: body_params.toString()
+		});
+
+		const data = await response.json();
+
+		if (response.ok) {
+			ACCESS_TOKEN = data.access_token;
+			REFRESH_TOKEN = data.refresh_token;
+
+			set_local_storage({
+				access_token: data.access_token,
+				refresh_token: data.refresh_token
+			})
+		} else {
+			console.error('Refresh Token failed!!:', data);
+		}
+	} catch (e) {
+		console.error('Refresh Token request failed!:', e)
 	}
 }
 
@@ -210,6 +272,7 @@ async function start() {
 	while (!valid_access_token){
 		valid_access_token = await validate_access_token();
 		if (!valid_access_token) {
+			await get_new_tokens();
 			await delay(3000);
 		}
 	}
