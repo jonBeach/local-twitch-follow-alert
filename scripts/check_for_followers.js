@@ -15,6 +15,7 @@ FOLLOW_SOUND.volume = 0.5; //5 50% volume
 
 const POLL_INTERVAL = 2000; // Checks followers every 2 seconds
 const GIF_SHOW_DURATION = 5000; // Gif lasts 5 seconds on screen
+let is_refreshing = false; // for pausing check followers while refresh is happening
 
 let current_date = new Date().toISOString(); // current date in "20250-09-25T22:22:08Z" format
 
@@ -58,6 +59,10 @@ function show_follow_gif() {
 }
 
 async function check_new_follow() {
+	if (is_refreshing) {
+		return;
+	}
+
 	// Gets new follower list then checks for new followers
 	try {
 		const followers = await get_followers();
@@ -131,8 +136,13 @@ function load_config() {
 	}
 	try {
 		const config = JSON.parse(config_tag.textContent);
-		ACCESS_TOKEN = config.access_token;
-		REFRESH_TOKEN = config.refresh_token;
+
+		const stored_access_token = get_local_storage('access_token');
+		const stored_refresh_token = get_local_storage('refresh_token');
+
+		ACCESS_TOKEN = (stored_access_token !== null) ? stored_access_token : config.access_token;
+		REFRESH_TOKEN = (stored_refresh_token !== null) ? stored_refresh_token : config.refresh_token;
+
 		CLIENT_ID = config.client_id;
 		CLIENT_SECRET = config.client_secret;
 		USER_ID = config.user_id;
@@ -176,17 +186,18 @@ function get_local_storage(key) {
 }
 
 async function get_new_tokens() {
+	// Sends a request to twitch for new access and refresh token
 	const body_params = new URLSearchParams();
 	body_params.append('client_id', CLIENT_ID);
 	body_params.append('client_secret', CLIENT_SECRET);
 	body_params.append('grant_type', 'refresh_token');
 
-	const ls_refresh_token = get_local_storage('refresh_token');
+	const stored_refresh_token = get_local_storage('refresh_token');
 
-	if (ls_refresh_token === null) {
+	if (stored_refresh_token === null) {
 		body_params.append('refresh_token', REFRESH_TOKEN);
 	} else {
-		body_params.append('refresh_token', ls_refresh_token);
+		body_params.append('refresh_token', stored_refresh_token);
 	}
 
 	try {
@@ -245,6 +256,24 @@ async function validate_access_token() {
 	}
 }
 
+async function schedule_token_refresh(expires_in) {
+	// uses setTimout to schedule token refresh a min before it expires
+	const refresh_time = (expires_in - 60) * 1000;
+
+	setTimeout(async () => {
+		is_refreshing = true;
+
+		await get_new_tokens();
+
+		const valid = await validate_access_token();
+		if (valid) {
+			schedule_token_refresh(token_expires_in);
+		}
+
+		is_refreshing = false;
+	}, refresh_time);
+}
+
 function delay(ms) {
 	// Delay function...
 	return new Promise(resolve => setTimeout(resolve, ms));
@@ -277,6 +306,9 @@ async function start() {
 		}
 	}
 	
+	// setup token refresh check
+	schedule_token_refresh(token_expires_in);
+
 	// runs setup then starts the 2 second interval
 	// for checking for new followers
 	await init();
