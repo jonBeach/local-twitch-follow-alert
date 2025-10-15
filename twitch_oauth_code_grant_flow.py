@@ -146,6 +146,7 @@ def edit_html_file(access_token: str, user_id: str, refresh_token: str) -> bool:
 		f'\t\t\t"access_token": "{access_token}",\n',
 		f'\t\t\t"refresh_token": "{refresh_token}",\n',
 		f'\t\t\t"client_id": "{CLIENT_ID}",\n',
+		f'\t\t\t"client_secret": "{CLIENT_SECRET}",\n',
 		f'\t\t\t"user_id": "{user_id}"\n',
 		"\t\t}\n",
 		"\t</script>\n"
@@ -218,7 +219,7 @@ def main():
 
 	if not tokens:
 		sys.exit('No Tokens found. Try again?!?')
-	
+
 	try:
 		access_token = tokens['access_token']
 		refresh_token = tokens['refresh_token']
