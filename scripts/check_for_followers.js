@@ -20,14 +20,16 @@ let is_refreshing = false; // for pausing check followers while refresh is happe
 let current_date = new Date().toISOString(); // current date in "20250-09-25T22:22:08Z" format
 
 let known_follower_ids = new Set(); // Set of seen followers ids
+let fake_followers_ids = new Set(); // Set for debug fake followers
 
-const debug_followers = true; // set to 'true' to see follower debug
+const debug_followers = false; // set to 'true' to see follower debug
 let debug_div = document.getElementById('debug-last-follower');
 
 
 async function get_followers() {
 	// Gets followers from the api
 	// default is a list of 20 newest followers. Can be increased.
+	// to get the max (100) in one page add '&first=100' to end of URL
 	const URL = `https://api.twitch.tv/helix/channels/followers?broadcaster_id=${USER_ID}`;
 
 	const response = await fetch(URL, {
@@ -41,22 +43,54 @@ async function get_followers() {
 	return data.data;
 }
 
-function show_follow_gif() {
+function show_follow_gif(follower_name) {
 	// Displayes the gif and text for time set in GIF_SHOW_DURATION
 	// Plays sound just once
-	FOLLOW_GIF.style.display = 'block';
+	return new Promise((resolve) => {
+		// Made into a promise for async
+		FOLLOW_GIF.style.display = 'block';
 
-	FOLLOW_TEXT.textContent = FOLLOW_MSG;
-	FOLLOW_TEXT.style.display = 'block';
+		FOLLOW_TEXT.textContent = follower_name;
+		FOLLOW_TEXT.style.display = 'block';
 
-	FOLLOW_SOUND.currentTime = 0;
-	FOLLOW_SOUND.play();
+		FOLLOW_SOUND.currentTime = 0;
+		FOLLOW_SOUND.play();
 
-	setTimeout(() => {
-		FOLLOW_GIF.style.display = 'none';
-		FOLLOW_TEXT.style.display = 'none';
-	}, GIF_SHOW_DURATION);
+		setTimeout(() => {
+			FOLLOW_GIF.style.display = 'none';
+			FOLLOW_TEXT.style.display = 'none';
+			resolve();
+		}, GIF_SHOW_DURATION);
+	});
 }
+
+const follow_alert_queue = (() => {
+	// Immediatly invoked function epression
+	// Adds new followers to the queue
+	// plays the follower alert for every user in queue
+	// (I really like this)
+	let queue = [];
+	let is_playing = false;
+
+	async function play_alert() {
+		if (is_playing || queue.length === 0) return;
+
+		is_playing = true;
+		const follower = queue.shift();
+		
+		await show_follow_gif(follower);
+
+		is_playing = false;
+		play_alert();
+	}
+
+	return {
+		add(follower) {
+			queue.push(follower);
+			play_alert();
+		}
+	};
+})();
 
 async function check_new_follow() {
 	if (is_refreshing) {
@@ -77,8 +111,12 @@ async function check_new_follow() {
 			`Last Follower: ${last_follower.user_name}
 			ID: ${last_follower.user_id}
 			Date Followed: ${last_follower.followed_at}`;
-		}
 
+			// Insert fake follwers into the followers list for checking alert
+			followers.unshift(...fake_followers_ids);
+			fake_followers_ids.clear();
+		}
+		
 		// Reads through all the followers in the new list
 		for (const follower of followers) {
 			if (follower.followed_at < current_date) {
@@ -96,7 +134,8 @@ async function check_new_follow() {
 			if (!known_follower_ids.has(follower.user_id)) {
 				// New Follower Found
 				known_follower_ids.add(follower.user_id);
-				show_follow_gif();
+
+				follow_alert_queue.add(follower.user_name);
 
 				//break is for if for each poll i only want to show
 				//the gif only once.
@@ -122,6 +161,34 @@ async function check_new_follow() {
 	} catch (e) {
 		console.error('Error checking followers: ', e);
 	}
+}
+
+function random_number(min, max) {
+	min = Math.ceil(min);
+	max = Math.floor(max);
+
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function add_follower() {
+	// Adds a fake follower to fake followers set
+	let fake_current_date = new Date().toISOString();
+	// this random number is pointless i could have just done date
+	// but i learned something
+	let fake_id = random_number((10 * 1000), 100 * 1000) + Date.now();
+	let fake_user_name = 'FAKE USER ' + random_number(0, 1000) + Date.now();
+
+	new_fake_follower = {
+		'user_id': fake_id,
+		'user_name': fake_user_name,
+		'followed_at': fake_current_date
+	};
+	fake_followers_ids.add(new_fake_follower);
+}
+
+function remove_follower() {
+	const first_item = known_follower_ids.values().next().value;
+	known_follower_ids.delete(first_item);
 }
 
 function load_config() {
@@ -287,6 +354,7 @@ async function init() {
 
 		if (debug_followers) {
 			console.log(known_follower_ids);
+			document.getElementById('follower-buttons').style.display = 'block';
 		}
 	} catch (e) {
 		console.error('Error loading inital followers:', e);
