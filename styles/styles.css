@@ -70,3 +70,12 @@ body {
 	font-weight: bold;
 	text-align: center;
 }
+
+#follower-buttons button{
+	display: block;
+	margin-bottom: 2em;
+}
+
+#follower-buttons {
+	margin-bottom: 5em;
+}
