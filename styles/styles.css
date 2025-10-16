@@ -77,5 +77,6 @@ body {
 }
 
 #follower-buttons {
+	display: none;
 	margin-bottom: 5em;
 }
