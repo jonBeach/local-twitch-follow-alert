@@ -6,6 +6,24 @@
 	<link rel='stylesheet' href='styles/styles.css'/>
 </head>
 <body>
+	<div id='follower-buttons'>
+		<button 
+			id='add-follower-button'
+			type='button'
+			onclick='add_follower()'
+		>
+			Add Follower
+		</button>
+		
+		<button
+			id='remove-follower-button'
+			type='button'
+			onclick='remove_follower()'
+		>
+			Remove Follower
+		</button>
+	</div>
+	
 	<div id='debug-last-follower'></div>
 
 	<div id='blackout-screen'>
