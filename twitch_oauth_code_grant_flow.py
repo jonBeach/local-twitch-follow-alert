@@ -3,6 +3,8 @@ import os
 import sys
 import requests
 import json
+import random
+import string
 from env_manager import Env
 
 # Load env variables
@@ -12,7 +14,7 @@ CLIENT_ID = env.get_env_variable('CLIENT_ID')
 REDIRECT_URI = env.get_env_variable('REDIRECT_URI')
 CLIENT_SECRET = env.get_env_variable('CLIENT_SECRET')
 
-STATE_CODE = 'randomStuffHereHAHAH'
+STATE_CODE = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
 
 # Scope of what the oauth wants to access
 SCOPES = [
@@ -100,11 +102,14 @@ def get_user_code(url: str) -> str | None:
 	params = url.split('?')[1]
 	params = params.split('&')
 
+	code = None
 	for param in params:
 		key, value = param.split('=')
 
 		if key == 'code':
-			return value
+			code = value
+		if key == 'state' and value == STATE_CODE:
+			return code
 	return None
 
 
